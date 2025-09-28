@@ -99,7 +99,7 @@ def rho(n_model, num_layers=18):
             "accelerator": "gpu",
             "devices": 1,
             "min_epochs": 1,
-            "max_epochs": 1,
+            "max_epochs": 30,
             "enable_progress_bar": True,
         },
         "model": {
