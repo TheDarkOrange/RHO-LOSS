@@ -27,6 +27,8 @@ from src.utils.calibration import temperature_scale_model
 from pathlib import Path
 
 seed = 13
+num_workers = 4
+temperature = False
 
 # Change working directory to the script's directory
 script_dir = Path(__file__).parent.absolute()
@@ -116,7 +118,7 @@ def rho(n_model, num_layers=18):
             "_target_": "src.datamodules.datamodules.CIFAR10DataModule",
             "data_dir": data_dir,
             "batch_size": 250,
-            "num_workers": 10,
+            "num_workers": num_workers,
             "pin_memory": True,
             "shuffle": True,
             "trainset_data_aug": False,
@@ -234,20 +236,19 @@ def rho(n_model, num_layers=18):
         val_dataloaders=datamodule.train_dataloader(),
     )
 
-    """
-    print("Calibrating model with temperature scaling...")
-
-    # Calibrate the model using validation data
-    temperature = temperature_scale_model(
-        model=pl_model.model,
-        # You can use val_dataloader if it's cleaner
-        val_loader=datamodule.test_dataloader(),
-        device=device
-    )
-    pl_model.temperature = temperature
-
-    print(f"Optimal temperature: {temperature:.4f}")
-    """
+    if temperature:
+        print("Calibrating model with temperature scaling...")
+    
+        # Calibrate the model using validation data
+        temperature = temperature_scale_model(
+            model=pl_model.model,
+            # You can use val_dataloader if it's cleaner
+            val_loader=datamodule.test_dataloader(),
+            device=device
+        )
+        pl_model.temperature = temperature
+    
+        print(f"Optimal temperature: {temperature:.4f}")
 
     # Evaluate model on test set, using the best model achieved during training
     if config.get("test_after_training") and not config.trainer.get("fast_dev_run"):
@@ -337,7 +338,7 @@ def model(model_name, saved_path, model_saved_path, avg=None, datamodule=None, n
             "_target_": "src.datamodules.datamodules.CIFAR10DataModule",
             "data_dir": data_dir,
             "batch_size": 200,
-            "num_workers": 20,
+            "num_workers": num_workers,
             "pin_memory": True,
             "shuffle": True,
             "trainset_data_aug": True,
